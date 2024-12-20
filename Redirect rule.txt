@@ -1,0 +1,19 @@
+Redirect non-www to www
+=========================================================
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^domain\.com [NC]
+RewriteRule ^(.*)$ http://www.domain.com/$1 [L,R=301]
+</IfModule>
+
+
+Redirect www to non-www
+=========================================================
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^www\.domain\.com [NC]
+RewriteRule ^(.*)$ http://domain.com/$1 [L,R=301]
+</IfModule>
+
+
+
