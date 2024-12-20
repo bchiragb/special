@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Variations with JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .product-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .variation-selector {
+            margin-bottom: 20px;
+        }
+        .variation-selector label {
+            font-weight: bold;
+        }
+        .swatch-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .swatch.selected {
+            border: 1px solid #000;
+        }
+        .swatch.disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .swatch.disabled::before {
+            content: "✖";
+            min-height: 20px;
+            min-width: 20px;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            font-size: 10px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            border-radius: 100%;
+            cursor: not-allowed;
+            margin: 16px;
+        }
+        .swatch span {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+        #product-details {
+            margin-top: 30px;
+            font-size: 18px;
+        }
+        #price {
+            color: #333;
+        }
+        .clear-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .swatch.selected::before{
+            content: "✓";
+            min-height: 20px;
+            min-width: 20px;
+            background-color: #398f14;
+            color: #fff;
+            text-align: center;
+            font-size: 10px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: none;
+            bottom: auto;
+            opacity: 1;
+            visibility: visible;
+            left: auto;
+            right: auto;
+            border-radius: 100%;
+            margin: 0px;
+            border-width: 0px;
+            border-style: initial;
+            border-color: initial;
+            border-image: initial;
+        }
+    </style>
+</head>
+<body>
+    <div class="product-container">
+        <h1 id="product-name">Product Name: CB</h1>
+
+        <div id="product-details">
+            <p id="price">Price: $0</p>
+        </div>
+
+        <button class="clear-button" id="clear-selection">Clear</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Example product data with variants
+        const masfiled = ['color', 'size', 'occasion', 'sleeves_length'];
+        const variants = [
+            {color:"Red", size:"Extra large", occasion:"Festival", sleeves_length:"Full Sleeves", sku:"aas-89", stock:80, rprice:30, sprice:20, id:17346713261},
+            {color:"Black", size:"XXL", occasion:0, sleeves_length:"Full Sleeves", sku:"SB-428", stock:150, rprice:399, sprice:289, id:17346713262},
+            {color:"White", size:"Small", occasion:0, sleeves_length:0, sku:"YB-10", stock:2, rprice:450, sprice:420, id:17346713263},
+            {color:0, size:"Large", occasion:0, sleeves_length:0, sku:"RD-124456", stock:1530, rprice:745, sprice:740, id:17346713264},
+            {color:"Blue", size:"Medium", occasion:"Casual", sleeves_length:"Short Sleeves", sku:"AB-111", stock:50, rprice:100, sprice:80, id:17346713265},
+            {color:"Green", size:"Small", occasion:"Wedding", sleeves_length:"Half Sleeves", sku:"CD-333", stock:60, rprice:200, sprice:150, id:17346713266}
+        ];
+
+        //crate html and add in page
+        masfiled.forEach(colnm => {
+            var htmlx = '<div class="variation-selector" id="'+colnm+'-selector" data-set="'+colnm+'" data-val=""><label for="'+colnm+'">'+colnm+':</label><div class="swatch-container" id="'+colnm+'-container"></div></div>';
+            $(".product-container").append(htmlx);
+        });
+
+        // Initialize the object for each field
+        var mast = {};
+        masfiled.forEach(colnm => {
+            mast[colnm] = new Set(); 
+            $.each(variants, function(index, variant) {
+                if(variant[colnm] != 0) { mast[colnm].add(variant[colnm]); }
+            });
+            mast[colnm] = [...mast[colnm]];
+        });
+
+        // Dynamically add value to variation
+        masfiled.forEach(colnm => {
+            $.each(mast[colnm], function(key, val) {
+                if(colnm == "color") {
+                    $("#"+colnm+"-container").append('<div class="swatch" style="background-color: '+val+'" data-value="'+val+'">'+val+'</div>');
+                } else {
+                    $("#"+colnm+"-container").append('<div class="swatch" data-value="'+val+'">'+val+'</div>');
+                }
+            });
+        });
+
+        // Add class when clicking on variant option
+        $(".swatch").on("click", function() {
+            var selectedValue = $(this).data("value");
+            var containerId = $(this).closest(".variation-selector").attr("id");
+            $(this).siblings().removeClass("selected");
+            if($(this).hasClass("selected")) {
+                $(this).removeClass("selected");
+                $("#" + containerId).attr('data-val', "");
+            } else {
+                if(!$(this).hasClass("disabled")) {
+                    $(this).addClass("selected");
+                    $("#" + containerId).attr('data-val', selectedValue);
+                }
+            }
+            updateprice();
+            disableUnrelatedVariants(); // Disable unrelated variations
+        });
+
+        // Clear selection option
+        $("#clear-selection").on("click", function() {
+            $(".variation-selector").attr('data-val', "");
+            $(".swatch").removeClass("selected").removeClass("disabled");
+            $(".variation-selector").show(); 
+            $("#price").text("Price: $0");
+        });
+
+        function updateprice(){ 
+            const selctval = {};
+            $(".variation-selector").each(function() { 
+                var colnm = $(this).attr('data-set');
+                var valnm = $(this).attr('data-val') ? $(this).attr('data-val') : 0;
+                selctval[colnm] = valnm;
+            });
+            //
+            function checkVariant(variant, selctval) {
+                return Object.keys(selctval).every(key => {
+                    return variant[key] === selctval[key];
+                });
+            }
+            //
+            const matchedVariants = variants.filter(variant => checkVariant(variant, selctval));
+            if (matchedVariants.length > 0) {
+                const variant = matchedVariants[0];
+                $("#price").text("Price: $"+ variant.sprice);
+            } else { $("#price").text("Price: $0"); }
+        }
+
+        // Disable unrelated variations based on selected values
+        function disableUnrelatedVariants() {
+            const selectedValues = {};
+            $(".variation-selector").each(function() {
+                const colnm = $(this).attr('data-set');
+                const valnm = $(this).attr('data-val') || null;
+                selectedValues[colnm] = valnm;
+            });
+
+            masfiled.forEach(colnm => {
+                $("#" + colnm + "-container .swatch").each(function() {
+                    const value = $(this).data("value");
+                    if (value !== null) {
+                        // Check if the current variant matches the selected ones
+                        const hasMatchingVariants = variants.some(variant => {
+                            return variant[colnm] === value && Object.keys(selectedValues).every(key => {
+                                if (key === colnm) return true; // Skip the current field
+                                return selectedValues[key] === null || selectedValues[key] === variant[key];
+                            });
+                        });
+                        // Add or remove the disabled class
+                        if (hasMatchingVariants) {
+                            $(this).removeClass("disabled");
+                        } else {
+                            $(this).addClass("disabled");
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
